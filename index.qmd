@@ -1,5 +1,5 @@
 ---
-title: "Weekly Summary Template"
+title: "Week 5 Summary"
 author: "Author Name"
 title-block-banner: true
 title-block-style: default
@@ -8,69 +8,226 @@ format: html
 # format: pdf
 ---
 
----
+------------------------------------------------------------------------
 
 ## Tuesday, Jan 17
 
-::: {.callout-important}
+::: callout-important
 ## TIL
 
-Include a _very brief_ summary of what you learnt in this class here. 
+Include a *very brief* summary of what you learnt in this class here.
 
 Today, I learnt the following concepts in class:
 
-1. Item 1
-1. Item 2
-1. Item 3
+1.  Interpreting Regression Coefficients
+2.  Categorical Covariates
+3.  Reordering Factors + Setting a Baseline
 :::
 
-Provide more concrete details here. You can also use footenotes[^footnote] if you like
+Packages:
 
-```{R results='hide'}
-#| output: false
-library(dplyr)
-library(purrr)
+```{R}
+library(tidyverse)
+library(ISLR2)
+library(cowplot)
+library(kableExtra)
 ```
 
+Provide more concrete details here. You can also use footenotes[^1] if you like
 
-For example: 
-in class we learnt we learnt about the `map` function from the `purrr` package. 
+[^1]: You can include some footnotes here
 
+### Interpreting regression coefficients
 
-```{R results='hide', fig.width=7, fig.height=7}
-par(mfrow=c(3, 3), mar=c(3.5, 3.5, 2, 1), mgp=c(2.4, 0.8, 0))
-map(1:9, function(i)rnorm(1000) %>% hist(., main=i, col=i))
+Recall that the regression model is $y_i=\beta_0+\beta_1x_i+\epsilon_i$
+
+$y_i$ is the response, $x_i$ is the covariate, $\epsilon_i$ is the error, $\beta_0$ and $\beta_1$ are the regression coefficients, and $i=1,2,...,n$ are the indices for the observations.
+
+Example using mtcars:
+
+```{R}
+library(ggplot2)
+attach(mtcars)
+
+mtcars %>% head()
 ```
 
+```{R}
+x <- mtcars$hp
+y<- mtcars$mpg
+
+plot(x,y,pch=20, xlab="Horsepower", ylab="Miles per Gallon")
+
+model<-lm(y~x)
+summary(model)
+```
+
+*For the intercept, a hypothetical car with 0 horsepower would have a predicted mpg of 30.099=*$\beta_0$ For the slope, each increase of 1 horsepower decreases the predicted mpg by 0.068=$\beta_1$
+
+### Using Categorical Covariates
+
+Return to the mtcars dataset, looking at the cyl variable. Also look at the iris dataset:
+
+```{R}
+mtcars$cyl
+iris%>%head()
+summary(iris$Species)
+```
+
+EDA for a potential relationship between Species and Sepal.Length:
+
+```{R}
+boxplot(Sepal.Length~Species, data=iris)
+```
+
+Run a linear regression model:
+
+```{R}
+iris_model <- lm(Sepal.Length~Species,iris)
+iris_model
+```
+
+With a categorical x, we can write the regression model the same way: $y_i=\beta_0+\beta_1x_i$, where $x\in\{setosa,versicolor,virginica}$
+
+We essentially have 3 different models: 
+
+* $y_i=\beta_0+\beta_1x_i=$setosa
+* $y_i=\beta_0+\beta_1x_i=$versicolor 
+* $y_i=\beta_0+\beta_1x_i=$virginica
+
+-   For the baseline (setosa), $\beta_1=0$ such that $\beta_0$ is the expected value for the baseline category.
+-   For the other two beta 1 values, they describe the change from the baseline to its category.(ex. setosa to versicolor and setosa to virginica)
+
+### Reordering Factors
+
+Let's say we want to place virginica as the baseline.
+```{R}
+iris$Species <- relevel(iris$Species,"virginica")
+summary(iris$Species)
+
+new_iris_model<-lm(Sepal.Length~Species,iris)
+new_iris_model
+```
 
 
 ## Thursday, Jan 19
 
-
-
-::: {.callout-important}
+::: callout-important
 ## TIL
 
-Include a _very brief_ summary of what you learnt in this class here. 
+Include a *very brief* summary of what you learnt in this class here.
 
 Today, I learnt the following concepts in class:
 
-1. Item 1
-1. Item 2
-1. Item 3
+1.  Introduction to Multiple Linear Regression
+2.  Relationship between beta values and R-squared
+3.  Categorical Covariates in MLR
 :::
 
-Provide more concrete details here, e.g., 
+Provide more concrete details here, e.g.,
 
-In class we learnt how to use the `map` function to create multiple regression diagnostic plots
+```{R}
+# packages for today
+library(plotly)
+```
 
-```{R results='hide', fig.height=4}
-par(mfcol=c(2, 3), mar=c(3.5, 3.5, 2, 1), mgp=c(2.4, 0.8, 0))
-mtcars %>%
-  split(.$cyl) %>%
-  map(~ lm(mpg ~ wt, data = .x)) %>%
-  map(function(x)plot(x, which=c(1, 2)))
+### Multiple Linear Regression
+
+We now have p covariates instead of 1: $X=\{x_1|x_2|...|x_p\}$ such that $y=\beta_0+\beta_1x_1+...+\beta_px_p$ and the full description is $y_i=\beta_0+\beta_1x_{1i}+...+\beta_px_{pi}+\epsilon_i$
+
+Look at the Credit dataset:
+```{R}
+attach(ISLR2::Credit)
+df<-Credit%>%tibble()
+df
+```
+
+Focus on income, rating, and limit:
+```{R}
+df3 <- df %>%select(Income,Limit,Rating)
+df3
+```
+To see how credit limit relates to income and rating, use the following EDA:
+```{R}
+fig <- plot_ly(df3, x=~Income,y=~Rating,z=~Limit)
+fig%>%add_markers()
+```
+
+And a model:
+```{R}
+model<- lm(Limit~Income+Rating,df3)
+model
+```
+
+The model looks like a hyperplane when using 2 covariates:
+```{R}
+ranges <- df3 %>%
+  select(Income,Rating) %>%
+  colnames()%>%
+  map(\(x) seq(0.1*min(df3[x]),1.1*max(df3[x]),length.out=50))
+
+b<-model$coefficients
+z<-outer(
+  ranges[[1]],
+  ranges[[2]],
+  Vectorize(function(x2,x3) {
+    b[1]+b[2]*x2+b[3]*x3
+    })
+)
+fig%>%
+  add_surface(x=ranges[[1]],y=ranges[[2]],z=t(z),alpha=0.3)%>%
+  add_markers()
+```
+
+Interpretation:
+
+* $\beta_0=-532.47$ is the expected value of $y$ when $income=0$ and $rating=0$
+* If Rating is held constant and Income changes by 1 unit, the corresponding change in Limit is $\beta_1=0.553$ units
+* If Income is held constant and Rating changes by 1 unit, the corresponding change in Limit is $\beta_2=14.77$ units
+
+Significance:
+```{R}
+summary(model)
+```
+
+Clear case of multicolinearity, Income and Rating are related, so that is why Income shows up as completely insignificant.
+
+#### Relating betas and R-squared:
+```{R}
+x<-seq(0,1,length.out=100)
+b0<-0.00001
+b1<-0.00001
+y<-b0+b1*x+rnorm(100)*0.000001
+plot(x,y,pch=20)
+modelex <- lm(y~x)
+summary(modelex)
+```
+You can have a significant p-value without a high R-squared, but not vice versa. To have a high R-squared, you *NEED* a significant p-value.
+
+### Multiple Regression with Categorical Covariates
+
+Very similarly to simple linear regression, a categorical covariate changes the intercept.
+
+```{R}
+attach(Credit)
+df<-Credit%>%tibble()
+
+model <- lm(Limit~Rating+Married,df)
+model
+```
+
+```{R}
+ggplot(df)+
+  geom_point(aes(x=Rating,y=Limit,color=Married))+
+  geom_smooth(aes(x=Rating,y=Limit, fill=Married))
 ```
 
 
-[^footnote]: You can include some footnotes here
+
+
+
+
+
+
+
+
