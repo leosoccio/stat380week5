@@ -1,11 +1,10 @@
 ---
 title: "Week 5 Summary"
-author: "Author Name"
+author: "Leo Soccio"
 title-block-banner: true
 title-block-style: default
 toc: true
-format: html
-# format: pdf
+format: pdf
 ---
 
 ------------------------------------------------------------------------
@@ -87,7 +86,7 @@ iris_model <- lm(Sepal.Length~Species,iris)
 iris_model
 ```
 
-With a categorical x, we can write the regression model the same way: $y_i=\beta_0+\beta_1x_i$, where $x\in\{setosa,versicolor,virginica}$
+With a categorical x, we can write the regression model the same way: $y_i=\beta_0+\beta_1x_i$, where $x\in(setosa,versicolor,virginica)$
 
 We essentially have 3 different models: 
 
@@ -149,8 +148,9 @@ df3
 ```
 To see how credit limit relates to income and rating, use the following EDA:
 ```{R}
-fig <- plot_ly(df3, x=~Income,y=~Rating,z=~Limit)
-fig%>%add_markers()
+# fig <- plot_ly(df3, x=~Income,y=~Rating,z=~Limit)
+# fig%>%add_markers()
+# these interactive plots break the pdf rendering so they will not be included in the pdf submission.
 ```
 
 And a model:
@@ -161,22 +161,23 @@ model
 
 The model looks like a hyperplane when using 2 covariates:
 ```{R}
-ranges <- df3 %>%
-  select(Income,Rating) %>%
-  colnames()%>%
-  map(\(x) seq(0.1*min(df3[x]),1.1*max(df3[x]),length.out=50))
+# ranges <- df3 %>%
+ # select(Income,Rating) %>%
+#  colnames()%>%
+ # map(\(x) seq(0.1*min(df3[x]),1.1*max(df3[x]),length.out=50))
 
-b<-model$coefficients
-z<-outer(
-  ranges[[1]],
-  ranges[[2]],
-  Vectorize(function(x2,x3) {
-    b[1]+b[2]*x2+b[3]*x3
-    })
-)
-fig%>%
-  add_surface(x=ranges[[1]],y=ranges[[2]],z=t(z),alpha=0.3)%>%
-  add_markers()
+#b<-model$coefficients
+#z<-outer(
+ # ranges[[1]],
+  #ranges[[2]],
+  #Vectorize(function(x2,x3) {
+   # b[1]+b[2]*x2+b[3]*x3
+    #})
+#)
+#fig%>%
+ # add_surface(x=ranges[[1]],y=ranges[[2]],z=t(z),alpha=0.3)%>%
+#  add_markers()
+#once again, the interactive plots cannot be included in the pdf submission.
 ```
 
 Interpretation:
